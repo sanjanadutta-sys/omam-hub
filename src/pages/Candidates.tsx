@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useDataStore, Candidate } from "@/stores/dataStore";
+import { isDateInRange } from "@/lib/dateUtils";
 
 const Candidates = () => {
   const { candidates, addCandidates } = useDataStore();
@@ -48,9 +49,11 @@ const Candidates = () => {
         candidate.jobTitle.toLowerCase().includes(searchLower) ||
         candidate.vendor.toLowerCase().includes(searchLower);
       
-      return matchesSearch;
+      const matchesDate = isDateInRange(candidate.createdAt, startDate, endDate);
+      
+      return matchesSearch && matchesDate;
     });
-  }, [candidates, searchQuery]);
+  }, [candidates, searchQuery, startDate, endDate]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

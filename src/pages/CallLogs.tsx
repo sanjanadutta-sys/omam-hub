@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useDataStore } from "@/stores/dataStore";
 import { toast } from "sonner";
+import { isDateInRange } from "@/lib/dateUtils";
 
 const getCallIcon = (type: string) => {
   switch (type) {
@@ -56,10 +57,11 @@ const CallLogs = () => {
       
       const matchesType = typeFilter === "all" || log.type === typeFilter;
       const matchesStatus = statusFilter === "all" || log.status.toLowerCase() === statusFilter;
+      const matchesDate = isDateInRange(log.date, startDate, endDate);
       
-      return matchesSearch && matchesType && matchesStatus;
+      return matchesSearch && matchesType && matchesStatus && matchesDate;
     });
-  }, [callLogs, searchQuery, typeFilter, statusFilter]);
+  }, [callLogs, searchQuery, typeFilter, statusFilter, startDate, endDate]);
 
   const handleRefresh = () => {
     setSearchQuery("");

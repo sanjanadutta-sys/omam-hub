@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useDataStore } from "@/stores/dataStore";
 import { toast } from "sonner";
+import { isDateInRange } from "@/lib/dateUtils";
 
 const JobDescriptions = () => {
   const { jobs } = useDataStore();
@@ -25,9 +26,11 @@ const JobDescriptions = () => {
         job.category.toLowerCase().includes(searchLower) ||
         job.status.toLowerCase().includes(searchLower);
       
-      return matchesSearch;
+      const matchesDate = isDateInRange(job.posted, startDate, endDate);
+      
+      return matchesSearch && matchesDate;
     });
-  }, [jobs, searchQuery]);
+  }, [jobs, searchQuery, startDate, endDate]);
 
   const handleRefresh = () => {
     setSearchQuery("");
