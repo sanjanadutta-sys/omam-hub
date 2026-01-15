@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, RefreshCw, MoreHorizontal, Phone, Mail, Upload, FileSpreadsheet } from "lucide-react";
@@ -25,33 +25,32 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-
-interface Candidate {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  client: string;
-  jobTitle: string;
-  vendor: string;
-  createdAt: string;
-}
-
-const initialCandidates: Candidate[] = [
-  { id: 1, name: "Ronak Shah", email: "ronak@intglobal.com", phone: "+18123277308", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 08:32 AM CDT" },
-  { id: 2, name: "Test", email: "--", phone: "+916290512352", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 03:05 AM ADT" },
-  { id: 3, name: "Santosh Singh", email: "tarak@intglobal.com", phone: "+916290512352", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 02:21 AM CDT" },
-  { id: 4, name: "Paloma", email: "--", phone: "+916289715423", client: "Tsavo West Inc", jobTitle: "Weekend L20 Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 03:05 AM ADT" },
-  { id: 5, name: "Mukesh Singh", email: "mukesh@yopmail.com", phone: "+916290512352", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 01:59 AM CDT" },
-  { id: 6, name: "Jayden", email: "--", phone: "+918777315232", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 01:40 AM CDT" },
-];
+import { useDataStore, Candidate } from "@/stores/dataStore";
 
 const Candidates = () => {
-  const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates);
+  const { candidates, addCandidates } = useDataStore();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredCandidates = useMemo(() => {
+    return candidates.filter((candidate) => {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = !searchQuery || 
+        candidate.name.toLowerCase().includes(searchLower) ||
+        candidate.email.toLowerCase().includes(searchLower) ||
+        candidate.phone.toLowerCase().includes(searchLower) ||
+        candidate.client.toLowerCase().includes(searchLower) ||
+        candidate.jobTitle.toLowerCase().includes(searchLower) ||
+        candidate.vendor.toLowerCase().includes(searchLower);
+      
+      return matchesSearch;
+    });
+  }, [candidates, searchQuery]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -107,7 +106,7 @@ const Candidates = () => {
       });
 
       const newCandidates: Candidate[] = jsonData.map((row: any, index: number) => ({
-        id: candidates.length + index + 1,
+        id: Date.now() + index,
         name: row.Name || row.name || row["Candidate Name"] || "--",
         email: row.Email || row.email || "--",
         phone: row.Phone || row.phone || row["Phone Number"] || "--",
@@ -117,7 +116,7 @@ const Candidates = () => {
         createdAt: formattedDate,
       }));
 
-      setCandidates(prev => [...newCandidates, ...prev]);
+      addCandidates(newCandidates);
       toast.success(`Successfully imported ${newCandidates.length} candidates`);
       setIsUploadDialogOpen(false);
       setSelectedFile(null);
@@ -146,12 +145,19 @@ const Candidates = () => {
     e.preventDefault();
   };
 
+  const handleRefresh = () => {
+    setSearchQuery("");
+    setStartDate("");
+    setEndDate("");
+    toast.success("Filters cleared");
+  };
+
   return (
     <div className="page-container animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <div className="page-header mb-0">
           <h1 className="page-title">Candidates</h1>
-          <p className="page-subtitle">Manage your candidates</p>
+          <p className="page-subtitle">Manage your candidates ({filteredCandidates.length} total)</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-sm">
@@ -237,8 +243,20 @@ const Candidates = () => {
 
       {/* Filters */}
       <div className="filter-bar">
-        <Input type="date" placeholder="Start Date" className="w-40" />
-        <Input type="date" placeholder="End Date" className="w-40" />
+        <Input 
+          type="date" 
+          placeholder="Start Date" 
+          className="w-40" 
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+        />
+        <Input 
+          type="date" 
+          placeholder="End Date" 
+          className="w-40" 
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+        />
         <Select defaultValue="all">
           <SelectTrigger className="w-24">
             <SelectValue placeholder="All" />
@@ -251,9 +269,14 @@ const Candidates = () => {
         </Select>
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search by name/email/phone..." className="pl-9" />
+          <Input 
+            placeholder="Search by name/email/phone..." 
+            className="pl-9" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" onClick={handleRefresh}>
           <RefreshCw className="w-4 h-4" />
         </Button>
       </div>
@@ -275,59 +298,67 @@ const Candidates = () => {
             </tr>
           </thead>
           <tbody>
-            {candidates.map((candidate) => (
-              <tr key={candidate.id} className="data-table-row">
-                <td className="data-table-cell">
-                  <div className="flex items-center gap-2">
-                    <div className="avatar-circle">
-                      {candidate.name.charAt(0)}
-                    </div>
-                    <span className="font-medium">{candidate.name}</span>
-                  </div>
-                </td>
-                <td className="data-table-cell">
-                  {candidate.email !== "--" ? (
-                    <span className="flex items-center gap-1 text-muted-foreground">
-                      <Mail className="w-3 h-3" />
-                      {candidate.email}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">--</span>
-                  )}
-                </td>
-                <td className="data-table-cell">
-                  <div className="flex items-center gap-2">
-                    <Button size="icon" variant="ghost" className="h-7 w-7 bg-success/10 text-success hover:bg-success/20">
-                      <Phone className="w-3 h-3" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 bg-primary/10 text-primary hover:bg-primary/20">
-                      <Phone className="w-3 h-3" />
-                    </Button>
-                    <span className="text-muted-foreground">{candidate.phone}</span>
-                  </div>
-                </td>
-                <td className="data-table-cell">{candidate.client}</td>
-                <td className="data-table-cell text-primary">{candidate.jobTitle}</td>
-                <td className="data-table-cell text-primary">{candidate.vendor}</td>
-                <td className="data-table-cell text-muted-foreground text-sm">{candidate.createdAt}</td>
-                <td className="data-table-cell text-center text-muted-foreground">--</td>
-                <td className="data-table-cell text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Schedule Call</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {filteredCandidates.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="data-table-cell text-center py-8 text-muted-foreground">
+                  No candidates found matching your search.
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredCandidates.map((candidate) => (
+                <tr key={candidate.id} className="data-table-row">
+                  <td className="data-table-cell">
+                    <div className="flex items-center gap-2">
+                      <div className="avatar-circle">
+                        {candidate.name.charAt(0)}
+                      </div>
+                      <span className="font-medium">{candidate.name}</span>
+                    </div>
+                  </td>
+                  <td className="data-table-cell">
+                    {candidate.email !== "--" ? (
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <Mail className="w-3 h-3" />
+                        {candidate.email}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">--</span>
+                    )}
+                  </td>
+                  <td className="data-table-cell">
+                    <div className="flex items-center gap-2">
+                      <Button size="icon" variant="ghost" className="h-7 w-7 bg-success/10 text-success hover:bg-success/20">
+                        <Phone className="w-3 h-3" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 bg-primary/10 text-primary hover:bg-primary/20">
+                        <Phone className="w-3 h-3" />
+                      </Button>
+                      <span className="text-muted-foreground">{candidate.phone}</span>
+                    </div>
+                  </td>
+                  <td className="data-table-cell">{candidate.client}</td>
+                  <td className="data-table-cell text-primary">{candidate.jobTitle}</td>
+                  <td className="data-table-cell text-primary">{candidate.vendor}</td>
+                  <td className="data-table-cell text-muted-foreground text-sm">{candidate.createdAt}</td>
+                  <td className="data-table-cell text-center text-muted-foreground">--</td>
+                  <td className="data-table-cell text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem>Schedule Call</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

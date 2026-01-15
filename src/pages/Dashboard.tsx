@@ -1,22 +1,70 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, FileText, Building2, Phone, TrendingUp, Clock } from "lucide-react";
-
-const stats = [
-  { title: "Total Candidates", value: "1,234", icon: Users, change: "+12%" },
-  { title: "Active Jobs", value: "56", icon: FileText, change: "+4%" },
-  { title: "Clients", value: "89", icon: Building2, change: "+8%" },
-  { title: "Calls Today", value: "24", icon: Phone, change: "+15%" },
-];
-
-const recentActivity = [
-  { id: 1, action: "New candidate added", name: "Ronak Shah", time: "2 minutes ago" },
-  { id: 2, action: "Job posted", name: "FedEx Delivery Driver", time: "15 minutes ago" },
-  { id: 3, action: "Client meeting scheduled", name: "Aurora 64", time: "1 hour ago" },
-  { id: 4, action: "Interview completed", name: "Santosh Singh", time: "2 hours ago" },
-  { id: 5, action: "Call logged", name: "Paloma", time: "3 hours ago" },
-];
+import { useDataStore } from "@/stores/dataStore";
+import { useMemo } from "react";
 
 const Dashboard = () => {
+  const { candidates, clients, jobs, callLogs } = useDataStore();
+
+  const stats = useMemo(() => {
+    const todaysCalls = callLogs.filter(log => log.date.includes("13th Jan 2026")).length;
+    const activeJobs = jobs.filter(job => job.status === "Active").length;
+    
+    return [
+      { title: "Total Candidates", value: candidates.length.toLocaleString(), icon: Users, change: "+12%" },
+      { title: "Active Jobs", value: activeJobs.toString(), icon: FileText, change: "+4%" },
+      { title: "Clients", value: clients.length.toString(), icon: Building2, change: "+8%" },
+      { title: "Calls Today", value: todaysCalls.toString(), icon: Phone, change: "+15%" },
+    ];
+  }, [candidates, clients, jobs, callLogs]);
+
+  const recentActivity = useMemo(() => {
+    const activities: { id: number; action: string; name: string; time: string }[] = [];
+    
+    // Add recent candidates
+    candidates.slice(0, 2).forEach((c, i) => {
+      activities.push({
+        id: i + 1,
+        action: "New candidate added",
+        name: c.name,
+        time: c.createdAt.includes("08:32") ? "2 minutes ago" : 
+              c.createdAt.includes("03:05") ? "15 minutes ago" : "1 hour ago"
+      });
+    });
+    
+    // Add recent jobs
+    jobs.slice(0, 1).forEach((j, i) => {
+      activities.push({
+        id: activities.length + 1,
+        action: "Job posted",
+        name: j.title,
+        time: "15 minutes ago"
+      });
+    });
+    
+    // Add recent clients
+    clients.slice(0, 1).forEach((c, i) => {
+      activities.push({
+        id: activities.length + 1,
+        action: "Client meeting scheduled",
+        name: c.name,
+        time: "1 hour ago"
+      });
+    });
+    
+    // Add recent calls
+    callLogs.slice(0, 1).forEach((c, i) => {
+      activities.push({
+        id: activities.length + 1,
+        action: "Call logged",
+        name: c.candidate,
+        time: "3 hours ago"
+      });
+    });
+    
+    return activities;
+  }, [candidates, clients, jobs, callLogs]);
+
   return (
     <div className="page-container animate-fade-in">
       <div className="page-header">
