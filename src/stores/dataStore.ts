@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface Candidate {
   id: number;
@@ -90,30 +91,37 @@ const initialCallLogs: CallLog[] = [
   { id: 6, candidate: "Test", phone: "+916290512352", type: "missed", duration: "--", status: "Missed", date: "12th Jan 2026 at 02:00 PM CDT", notes: "No answer" },
 ];
 
-export const useDataStore = create<DataStore>((set) => ({
-  candidates: initialCandidates,
-  clients: initialClients,
-  jobs: initialJobs,
-  callLogs: initialCallLogs,
-  
-  addCandidates: (newCandidates) => set((state) => ({
-    candidates: [...newCandidates, ...state.candidates]
-  })),
-  
-  addClient: (client) => set((state) => ({
-    clients: [client, ...state.clients]
-  })),
-  
-  addJob: (job) => set((state) => ({
-    jobs: [job, ...state.jobs]
-  })),
-  
-  addCallLog: (log) => set((state) => ({
-    callLogs: [log, ...state.callLogs]
-  })),
-  
-  setCandidates: (candidates) => set({ candidates }),
-  setClients: (clients) => set({ clients }),
-  setJobs: (jobs) => set({ jobs }),
-  setCallLogs: (callLogs) => set({ callLogs }),
-}));
+export const useDataStore = create<DataStore>()(
+  persist(
+    (set) => ({
+      candidates: initialCandidates,
+      clients: initialClients,
+      jobs: initialJobs,
+      callLogs: initialCallLogs,
+      
+      addCandidates: (newCandidates) => set((state) => ({
+        candidates: [...newCandidates, ...state.candidates]
+      })),
+      
+      addClient: (client) => set((state) => ({
+        clients: [client, ...state.clients]
+      })),
+      
+      addJob: (job) => set((state) => ({
+        jobs: [job, ...state.jobs]
+      })),
+      
+      addCallLog: (log) => set((state) => ({
+        callLogs: [log, ...state.callLogs]
+      })),
+      
+      setCandidates: (candidates) => set({ candidates }),
+      setClients: (clients) => set({ clients }),
+      setJobs: (jobs) => set({ jobs }),
+      setCallLogs: (callLogs) => set({ callLogs }),
+    }),
+    {
+      name: 'omam-data-storage',
+    }
+  )
+);

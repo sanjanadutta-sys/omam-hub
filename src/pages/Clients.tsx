@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useDataStore } from "@/stores/dataStore";
 import { toast } from "sonner";
+import { isDateInRange } from "@/lib/dateUtils";
 
 const Clients = () => {
   const { clients } = useDataStore();
@@ -27,9 +28,11 @@ const Clients = () => {
         client.contact.toLowerCase().includes(searchLower) ||
         client.timezone.toLowerCase().includes(searchLower);
       
-      return matchesSearch;
+      const matchesDate = isDateInRange(client.date, startDate, endDate);
+      
+      return matchesSearch && matchesDate;
     });
-  }, [clients, searchQuery]);
+  }, [clients, searchQuery, startDate, endDate]);
 
   const handleRefresh = () => {
     setSearchQuery("");
