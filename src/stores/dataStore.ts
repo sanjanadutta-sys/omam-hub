@@ -8,7 +8,6 @@ export interface Candidate {
   phone: string;
   client: string;
   jobTitle: string;
-  vendor: string;
   createdAt: string;
 }
 
@@ -40,13 +39,13 @@ export interface CallLog {
   date: string;
   notes: string;
 }
-
 interface DataStore {
   candidates: Candidate[];
   clients: Client[];
   jobs: Job[];
   callLogs: CallLog[];
   addCandidates: (newCandidates: Candidate[]) => void;
+  deleteCandidate: (id: number) => void;
   addClient: (client: Client) => void;
   addJob: (job: Job) => void;
   addCallLog: (log: CallLog) => void;
@@ -57,12 +56,12 @@ interface DataStore {
 }
 
 const initialCandidates: Candidate[] = [
-  { id: 1, name: "Ronak Shah", email: "ronak@intglobal.com", phone: "+18123277308", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 08:32 AM CDT" },
-  { id: 2, name: "Test", email: "--", phone: "+916290512352", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 03:05 AM ADT" },
-  { id: 3, name: "Santosh Singh", email: "tarak@intglobal.com", phone: "+916290512352", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 02:21 AM CDT" },
-  { id: 4, name: "Paloma", email: "--", phone: "+916289715423", client: "Tsavo West Inc", jobTitle: "Weekend L20 Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 03:05 AM ADT" },
-  { id: 5, name: "Mukesh Singh", email: "mukesh@yopmail.com", phone: "+916290512352", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 01:59 AM CDT" },
-  { id: 6, name: "Jayden", email: "--", phone: "+918777315232", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", vendor: "Tapai Ghosh", createdAt: "13th Jan 2026 at 01:40 AM CDT" },
+  { id: 1, name: "Ronak Shah", email: "ronak@intglobal.com", phone: "+18123277308", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", createdAt: "13th Jan 2026 at 08:32 AM CDT" },
+  { id: 2, name: "Test", email: "--", phone: "+916290512352", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", createdAt: "13th Jan 2026 at 03:05 AM ADT" },
+  { id: 3, name: "Santosh Singh", email: "tarak@intglobal.com", phone: "+916290512352", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", createdAt: "13th Jan 2026 at 02:21 AM CDT" },
+  { id: 4, name: "Paloma", email: "--", phone: "+916289715423", client: "Tsavo West Inc", jobTitle: "Weekend L20 Driver", createdAt: "13th Jan 2026 at 03:05 AM ADT" },
+  { id: 5, name: "Mukesh Singh", email: "mukesh@yopmail.com", phone: "+916290512352", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", createdAt: "13th Jan 2026 at 01:59 AM CDT" },
+  { id: 6, name: "Jayden", email: "--", phone: "+918777315232", client: "Aurora 64", jobTitle: "FedEx Delivery Driver", createdAt: "13th Jan 2026 at 01:40 AM CDT" },
 ];
 
 const initialClients: Client[] = [
@@ -102,6 +101,10 @@ export const useDataStore = create<DataStore>()(
       addCandidates: (newCandidates) => set((state) => ({
         candidates: [...newCandidates, ...state.candidates]
       })),
+      deleteCandidate: (id) =>
+    set((state) => ({
+      candidates: state.candidates.filter((c) => c.id !== id),
+    })),
       
       addClient: (client) => set((state) => ({
         clients: [client, ...state.clients]

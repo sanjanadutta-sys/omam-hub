@@ -29,7 +29,7 @@ import { useDataStore, Candidate } from "@/stores/dataStore";
 import { isDateInRange } from "@/lib/dateUtils";
 
 const Candidates = () => {
-  const { candidates, addCandidates } = useDataStore();
+  const { candidates, addCandidates, deleteCandidate } = useDataStore();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -63,8 +63,7 @@ const handleInitiateCall = () => {
         candidate.email.toLowerCase().includes(searchLower) ||
         candidate.phone.toLowerCase().includes(searchLower) ||
         candidate.client.toLowerCase().includes(searchLower) ||
-        candidate.jobTitle.toLowerCase().includes(searchLower) ||
-        candidate.vendor.toLowerCase().includes(searchLower);
+        candidate.jobTitle.toLowerCase().includes(searchLower) 
       
       const matchesDate = isDateInRange(candidate.createdAt, startDate, endDate);
       
@@ -132,7 +131,6 @@ const handleInitiateCall = () => {
         phone: row.Phone || row.phone || row["Phone Number"] || "--",
         client: row.Client || row.client || "--",
         jobTitle: row["Job Title"] || row.jobTitle || row.JobTitle || "--",
-        vendor: row.Vendor || row.vendor || "--",
         createdAt: formattedDate,
       }));
 
@@ -160,6 +158,10 @@ const handleInitiateCall = () => {
       toast.error("Please upload a valid Excel file (.xlsx or .xls)");
     }
   };
+  const handleDeleteCandidate = (candidate: Candidate) => {
+  deleteCandidate(candidate.id);
+  toast.success(`Deleted ${candidate.name}`);
+};
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -242,7 +244,7 @@ const handleInitiateCall = () => {
           <div className="bg-muted/50 rounded-md p-3 text-sm">
             <p className="font-medium mb-1">Expected columns:</p>
             <p className="text-muted-foreground">
-              Name, Email, Phone, Client, Job Title, Vendor
+              Name, Email, Phone, Client, Job Title
             </p>
           </div>
           <DialogFooter>
@@ -358,9 +360,7 @@ const handleInitiateCall = () => {
                 <tr key={candidate.id} className="data-table-row">
                   <td className="data-table-cell">
                     <div className="flex items-center gap-2">
-                      <div className="avatar-circle">
-                        {candidate.name.charAt(0)}
-                      </div>
+                      
                       <span className="font-medium">{candidate.name}</span>
                     </div>
                   </td>
@@ -387,7 +387,6 @@ const handleInitiateCall = () => {
                   </td>
                   <td className="data-table-cell">{candidate.client}</td>
                   <td className="data-table-cell text-primary">{candidate.jobTitle}</td>
-                  <td className="data-table-cell text-primary">{candidate.vendor}</td>
                   <td className="data-table-cell text-muted-foreground text-sm">{candidate.createdAt}</td>
                   <td className="data-table-cell text-center text-muted-foreground">--</td>
                   <td className="data-table-cell text-right">
@@ -401,7 +400,13 @@ const handleInitiateCall = () => {
                         <DropdownMenuItem>View Details</DropdownMenuItem>
                         <DropdownMenuItem>Edit</DropdownMenuItem>
                         <DropdownMenuItem>Schedule Call</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                        <DropdownMenuItem
+  className="text-destructive"
+  onClick={() => handleDeleteCandidate(candidate)}
+>
+  Delete
+</DropdownMenuItem>
+
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
