@@ -37,6 +37,23 @@ const Candidates = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
+const [callName, setCallName] = useState("");
+const [callPhone, setCallPhone] = useState("");
+
+const handleInitiateCall = () => {
+  if (!callName || !callPhone) {
+    toast.error("Please enter name and phone number");
+    return;
+  }
+
+  console.log("Initiating call:", { callName, callPhone });
+
+  toast.success(`Call initiated for ${callName}`);
+  setIsCallDialogOpen(false);
+  setCallName("");
+  setCallPhone("");
+};
 
   const filteredCandidates = useMemo(() => {
     return candidates.filter((candidate) => {
@@ -163,16 +180,14 @@ const Candidates = () => {
           <p className="page-subtitle">Manage your candidates ({filteredCandidates.length} total)</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-success"></span>
-              Vapi
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-primary"></span>
-              Ultravox
-            </span>
-          </div>
+        <Button
+  variant="outline"
+  className="gap-2"
+  onClick={() => setIsCallDialogOpen(true)}
+>
+  <Phone className="w-4 h-4" />
+</Button>
+
           <Button variant="outline" className="gap-2" onClick={() => setIsUploadDialogOpen(true)}>
             <Upload className="w-4 h-4" />
             Import Excel
@@ -243,6 +258,38 @@ const Candidates = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+<Dialog open={isCallDialogOpen} onOpenChange={setIsCallDialogOpen}>
+  <DialogContent className="sm:max-w-sm">
+    <DialogHeader>
+      <DialogTitle>Initiate Call</DialogTitle>
+    </DialogHeader>
+
+    <div className="space-y-4">
+      <Input
+        placeholder="Enter name"
+        value={callName}
+        onChange={(e) => setCallName(e.target.value)}
+      />
+      <Input
+        placeholder="Enter phone number"
+        value={callPhone}
+        onChange={(e) => setCallPhone(e.target.value)}
+      />
+    </div>
+
+    <DialogFooter>
+      <Button
+        variant="outline"
+        onClick={() => setIsCallDialogOpen(false)}
+      >
+        Cancel
+      </Button>
+      <Button onClick={handleInitiateCall}>
+        Initiate Call
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
       {/* Filters */}
       <div className="filter-bar">
@@ -289,13 +336,12 @@ const Candidates = () => {
         <table className="w-full min-w-[1100px]">
           <thead className="data-table-header">
             <tr>
-              <th className="data-table-cell text-left">Candidate Name ↑↓</th>
-              <th className="data-table-cell text-left">Email ↑↓</th>
-              <th className="data-table-cell text-left">Phone ↑↓</th>
-              <th className="data-table-cell text-left">Client ↑↓</th>
-              <th className="data-table-cell text-left">Job Title ↑↓</th>
-              <th className="data-table-cell text-left">Vendor</th>
-              <th className="data-table-cell text-left">Created At ↓</th>
+              <th className="data-table-cell text-left">Candidate Name</th>
+              <th className="data-table-cell text-left">Email</th>
+              <th className="data-table-cell text-left">Phone</th>
+              <th className="data-table-cell text-left">Client</th>
+              <th className="data-table-cell text-left">Job Title</th>
+              <th className="data-table-cell text-left">Created At </th>
               <th className="data-table-cell text-center">CV</th>
               <th className="data-table-cell text-right">Actions</th>
             </tr>
