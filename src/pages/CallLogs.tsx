@@ -18,6 +18,7 @@ import {
 import { useDataStore } from "@/stores/dataStore";
 import { toast } from "sonner";
 import { isDateInRange } from "@/lib/dateUtils";
+import TablePagination from "@/components/TablePagination";
 
 const getCallIcon = (type: string) => {
   switch (type) {
@@ -46,6 +47,10 @@ const CallLogs = () => {
   const [endDate, setEndDate] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const filteredCallLogs = useMemo(() => {
     return callLogs.filter((log) => {
@@ -63,12 +68,19 @@ const CallLogs = () => {
     });
   }, [callLogs, searchQuery, typeFilter, statusFilter, startDate, endDate]);
 
+  // Paginated data
+  const paginatedCallLogs = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredCallLogs.slice(start, start + pageSize);
+  }, [filteredCallLogs, currentPage, pageSize]);
+
   const handleRefresh = () => {
     setSearchQuery("");
     setStartDate("");
     setEndDate("");
     setTypeFilter("all");
     setStatusFilter("all");
+    setCurrentPage(1);
     toast.success("Filters cleared");
   };
 
@@ -148,14 +160,14 @@ const CallLogs = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredCallLogs.length === 0 ? (
+            {paginatedCallLogs.length === 0 ? (
               <tr>
                 <td colSpan={8} className="data-table-cell text-center py-8 text-muted-foreground">
                   No call logs found matching your search.
                 </td>
               </tr>
             ) : (
-              filteredCallLogs.map((log) => (
+              paginatedCallLogs.map((log) => (
                 <tr key={log.id} className="data-table-row">
                   <td className="data-table-cell">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-secondary">
@@ -196,6 +208,15 @@ const CallLogs = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      <TablePagination
+        currentPage={currentPage}
+        totalItems={filteredCallLogs.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+      />
     </div>
   );
 };

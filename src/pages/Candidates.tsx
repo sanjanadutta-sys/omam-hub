@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useDataStore, Candidate } from "@/stores/dataStore";
 import { isDateInRange } from "@/lib/dateUtils";
+import TablePagination from "@/components/TablePagination";
 
 const Candidates = () => {
   const { candidates, addCandidates, deleteCandidate } = useDataStore();
@@ -37,23 +38,25 @@ const Candidates = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
-const [callName, setCallName] = useState("");
-const [callPhone, setCallPhone] = useState("");
+  const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
+  const [callName, setCallName] = useState("");
+  const [callPhone, setCallPhone] = useState("");
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-const handleInitiateCall = () => {
-  if (!callName || !callPhone) {
-    toast.error("Please enter name and phone number");
-    return;
-  }
-
-  console.log("Initiating call:", { callName, callPhone });
-
-  toast.success(`Call initiated for ${callName}`);
-  setIsCallDialogOpen(false);
-  setCallName("");
-  setCallPhone("");
-};
+  const handleInitiateCall = () => {
+    if (!callName || !callPhone) {
+      toast.error("Please enter name and phone number");
+      return;
+    }
+    console.log("Initiating call:", { callName, callPhone });
+    toast.success(`Call initiated for ${callName}`);
+    setIsCallDialogOpen(false);
+    setCallName("");
+    setCallPhone("");
+  };
 
   const filteredCandidates = useMemo(() => {
     return candidates.filter((candidate) => {
@@ -63,13 +66,19 @@ const handleInitiateCall = () => {
         candidate.email.toLowerCase().includes(searchLower) ||
         candidate.phone.toLowerCase().includes(searchLower) ||
         candidate.client.toLowerCase().includes(searchLower) ||
-        candidate.jobTitle.toLowerCase().includes(searchLower) 
+        candidate.jobTitle.toLowerCase().includes(searchLower);
       
       const matchesDate = isDateInRange(candidate.createdAt, startDate, endDate);
       
       return matchesSearch && matchesDate;
     });
   }, [candidates, searchQuery, startDate, endDate]);
+
+  // Paginated data
+  const paginatedCandidates = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredCandidates.slice(start, start + pageSize);
+  }, [filteredCandidates, currentPage, pageSize]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -138,6 +147,7 @@ const handleInitiateCall = () => {
       toast.success(`Successfully imported ${newCandidates.length} candidates`);
       setIsUploadDialogOpen(false);
       setSelectedFile(null);
+      setCurrentPage(1);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -158,10 +168,11 @@ const handleInitiateCall = () => {
       toast.error("Please upload a valid Excel file (.xlsx or .xls)");
     }
   };
+
   const handleDeleteCandidate = (candidate: Candidate) => {
-  deleteCandidate(candidate.id);
-  toast.success(`Deleted ${candidate.name}`);
-};
+    deleteCandidate(candidate.id);
+    toast.success(`Deleted ${candidate.name}`);
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -171,6 +182,7 @@ const handleInitiateCall = () => {
     setSearchQuery("");
     setStartDate("");
     setEndDate("");
+    setCurrentPage(1);
     toast.success("Filters cleared");
   };
 
@@ -182,13 +194,13 @@ const handleInitiateCall = () => {
           <p className="page-subtitle">Manage your candidates ({filteredCandidates.length} total)</p>
         </div>
         <div className="flex items-center gap-3">
-        <Button
-  variant="outline"
-  className="gap-2"
-  onClick={() => setIsCallDialogOpen(true)}
->
-  <Phone className="w-4 h-4" />
-</Button>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setIsCallDialogOpen(true)}
+          >
+            <Phone className="w-4 h-4" />
+          </Button>
 
           <Button variant="outline" className="gap-2" onClick={() => setIsUploadDialogOpen(true)}>
             <Upload className="w-4 h-4" />
@@ -260,38 +272,38 @@ const handleInitiateCall = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-<Dialog open={isCallDialogOpen} onOpenChange={setIsCallDialogOpen}>
-  <DialogContent className="sm:max-w-sm">
-    <DialogHeader>
-      <DialogTitle>Initiate Call</DialogTitle>
-    </DialogHeader>
 
-    <div className="space-y-4">
-      <Input
-        placeholder="Enter name"
-        value={callName}
-        onChange={(e) => setCallName(e.target.value)}
-      />
-      <Input
-        placeholder="Enter phone number"
-        value={callPhone}
-        onChange={(e) => setCallPhone(e.target.value)}
-      />
-    </div>
-
-    <DialogFooter>
-      <Button
-        variant="outline"
-        onClick={() => setIsCallDialogOpen(false)}
-      >
-        Cancel
-      </Button>
-      <Button onClick={handleInitiateCall}>
-        Initiate Call
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+      {/* Call Dialog */}
+      <Dialog open={isCallDialogOpen} onOpenChange={setIsCallDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Initiate Call</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="Enter name"
+              value={callName}
+              onChange={(e) => setCallName(e.target.value)}
+            />
+            <Input
+              placeholder="Enter phone number"
+              value={callPhone}
+              onChange={(e) => setCallPhone(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCallDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleInitiateCall}>
+              Initiate Call
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filters */}
       <div className="filter-bar">
@@ -343,24 +355,23 @@ const handleInitiateCall = () => {
               <th className="data-table-cell text-left">Phone</th>
               <th className="data-table-cell text-left">Client</th>
               <th className="data-table-cell text-left">Job Title</th>
-              <th className="data-table-cell text-left">Created At </th>
+              <th className="data-table-cell text-left">Created At</th>
               <th className="data-table-cell text-center">CV</th>
               <th className="data-table-cell text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredCandidates.length === 0 ? (
+            {paginatedCandidates.length === 0 ? (
               <tr>
-                <td colSpan={9} className="data-table-cell text-center py-8 text-muted-foreground">
+                <td colSpan={8} className="data-table-cell text-center py-8 text-muted-foreground">
                   No candidates found matching your search.
                 </td>
               </tr>
             ) : (
-              filteredCandidates.map((candidate) => (
+              paginatedCandidates.map((candidate) => (
                 <tr key={candidate.id} className="data-table-row">
                   <td className="data-table-cell">
                     <div className="flex items-center gap-2">
-                      
                       <span className="font-medium">{candidate.name}</span>
                     </div>
                   </td>
@@ -401,12 +412,11 @@ const handleInitiateCall = () => {
                         <DropdownMenuItem>Edit</DropdownMenuItem>
                         <DropdownMenuItem>Schedule Call</DropdownMenuItem>
                         <DropdownMenuItem
-  className="text-destructive"
-  onClick={() => handleDeleteCandidate(candidate)}
->
-  Delete
-</DropdownMenuItem>
-
+                          className="text-destructive"
+                          onClick={() => handleDeleteCandidate(candidate)}
+                        >
+                          Delete
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -416,6 +426,15 @@ const handleInitiateCall = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      <TablePagination
+        currentPage={currentPage}
+        totalItems={filteredCandidates.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+      />
     </div>
   );
 };

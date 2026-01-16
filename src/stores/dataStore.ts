@@ -46,8 +46,10 @@ interface DataStore {
   callLogs: CallLog[];
   addCandidates: (newCandidates: Candidate[]) => void;
   deleteCandidate: (id: number) => void;
-  addClient: (client: Client) => void;
-  addJob: (job: Job) => void;
+  addClients: (newClients: Client[]) => void;
+  addJobs: (newJobs: Job[]) => void;
+  deleteClient: (id: number) => void;
+  deleteJob: (id: number) => void;
   addCallLog: (log: CallLog) => void;
   setCandidates: (candidates: Candidate[]) => void;
   setClients: (clients: Client[]) => void;
@@ -106,12 +108,20 @@ export const useDataStore = create<DataStore>()(
       candidates: state.candidates.filter((c) => c.id !== id),
     })),
       
-      addClient: (client) => set((state) => ({
-        clients: [client, ...state.clients]
+      addClients: (newClients) => set((state) => ({
+        clients: [...newClients, ...state.clients]
       })),
       
-      addJob: (job) => set((state) => ({
-        jobs: [job, ...state.jobs]
+      addJobs: (newJobs) => set((state) => ({
+        jobs: [...newJobs, ...state.jobs]
+      })),
+      
+      deleteClient: (id) => set((state) => ({
+        clients: state.clients.filter((c) => c.id !== id),
+      })),
+      
+      deleteJob: (id) => set((state) => ({
+        jobs: state.jobs.filter((j) => j.id !== id),
       })),
       
       addCallLog: (log) => set((state) => ({
