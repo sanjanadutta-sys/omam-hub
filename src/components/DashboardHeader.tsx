@@ -23,10 +23,10 @@ const DashboardHeader = () => {
         <DropdownMenuTrigger className="flex items-center gap-2 hover:opacity-80 transition-opacity outline-none">
           <Avatar className="w-9 h-9">
             <AvatarFallback className="bg-primary/10 text-primary font-medium">
-              JD
+              TB
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium text-foreground hidden sm:inline">John Doe</span>
+          <span className="text-sm font-medium text-foreground hidden sm:inline">Tarak Bhandary</span>
           <ChevronDown className="w-4 h-4 text-muted-foreground" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">

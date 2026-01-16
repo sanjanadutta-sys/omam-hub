@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,12 +17,20 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate login - replace with actual auth later
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/dashboard");
-    }, 1000);
+
+    // Check for specific credentials
+    if (email === "tarak@intglobal.com" && password === "int@123") {
+      setTimeout(() => {
+        setIsLoading(false);
+        toast.success("Welcome back, Tarak!");
+        navigate("/dashboard");
+      }, 500);
+    } else {
+      setTimeout(() => {
+        setIsLoading(false);
+        toast.error("Invalid email or password. Please try again.");
+      }, 500);
+    }
   };
 
   return (
